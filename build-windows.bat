@@ -1,5 +1,6 @@
 @echo off
 setlocal
+cd /d "%~dp0"
 where dotnet >nul 2>nul
 if errorlevel 1 (
   echo .NET 10 SDK not found. Install from https://dotnet.microsoft.com/download/dotnet/10.0
@@ -13,5 +14,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Build complete. Open build\RioIsland.exe
+echo Build complete. Open build\TheIsland.exe
 pause

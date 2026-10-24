@@ -1,82 +1,115 @@
-# RIO Island · Windows Dynamic Island (MVP v0.1)
+# The Island
 
-A custom, lightweight-leaning, always-on-top Dynamic Island-inspired desktop UI for Windows 10 (2004+) and Windows 11. Original WPF/C# implementation: **not a copy of the Nusa application**. Futuristic dark navy, cyan and violet styling.
+A lightweight WPF/C# desktop island for Windows 10 2004 (build 19041) or newer and Windows 11.
+This upgrades the existing application; internal namespace `RioIsland` and project path
+`src/RioIsland/RioIsland.csproj` are intentionally preserved. The executable is **TheIsland.exe**.
 
-## Features implemented in source
+## Features
 
-| Feature | v0.1 status |
-|---|---|
-| Expand/collapse top-center island | Implemented (280 ms easing) |
-| Dark futuristic overlay | Implemented (gradient, rounded shell) |
-| Windows current media track / artist | Implemented via Windows Media Control (depends on player support) |
-| Media previous, play/pause, next | Implemented (depends on player support) |
-| CPU/RAM percentage | Implemented with built-in Win32 APIs |
-| Focus timer 25 minutes | Implemented with pause/reset and tray balloon |
-| Timed lyrics (.lrc) | Implemented for manually loaded local LRC files; depends on player sharing timeline |
-| Clipboard capture / restore | Implemented, **only on button click**, in memory |
-| File drop shelf | Implemented for filename summary; not a persistent file manager |
-| System tray menu + exit | Implemented |
-| Ctrl+Alt+I hotkey | Implemented, if shortcut is available |
-| Launch with Windows | Implemented via current-user Run registry setting, opt-in |
-| Capture other apps' Windows notifications | **Not yet implemented** (needs permissions, privacy UI, and testing) |
-| Automatic synced-lyrics fetching | **Not implemented** (source/licensing considerations) |
-| Multi-monitor selector, DPI refinement | **Not yet implemented** (primary screen only) |
-| GPU metrics, themes and music artwork | Planned |
+- Black pill with layered glass-like gradients, a subtle static edge glow, and short spring-like expand/collapse motion.
+- Windows current media session: previous, play/pause, next, album artwork, elapsed time and progress.
+  Unsupported commands are disabled. Media availability depends on the player.
+- Local timestamp-synced LRC lyrics, including multiple timestamps, fractional seconds and signed
+  `[offset:milliseconds]`. Positive offsets show lyrics earlier. Load a file for the current track;
+  changing tracks clears that association to avoid displaying the wrong lyrics. Blank timestamped
+  lines clear the display during instrumental sections.
+- Minimal eye mascot: random blinks, greeting on open, sleep after 45 seconds with the island collapsed,
+  no playback and no running focus timer. This uses island activity, not global input monitoring.
+- Existing 25-minute focus timer with pause/reset and tray notification.
+- Existing opt-in clipboard capture/restore, in memory only.
+- Existing file-drop shelf (filename/count summary), clear action, tray menu, Ctrl+Alt+I hotkey and
+  opt-in Start with Windows. Escape collapses the panel.
+- Existing CPU and RAM metrics.
 
-### Prerequisites
+## Build
 
-- Windows 10 2004 (build 19041) or newer; Windows 11 recommended.
-- To **compile:** .NET 10 SDK, Visual Studio 2022/2026 with desktop .NET workload, or CI via GitHub Actions.
-- Published self-contained `RioIsland.exe` does **not** require separately installing the .NET runtime, but may extract native libraries on first run.
+Install the .NET 10 SDK, then run `build-windows.bat` from any directory.
+On success, run `build/TheIsland.exe`. The batch file can also be replaced with:
 
-## Fastest route: compile on your Windows PC
+```powershell
+dotnet publish src/RioIsland/RioIsland.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:DebugSymbols=false -o build
+```
 
-1. Install [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) (SDK, not just runtime).
-2. Extract the `RIO-Island-Source.zip` archive.
-3. Double-click `build-windows.bat` (or open CMD in the extracted folder and run it).
-4. If build succeeds, launch `build\RioIsland.exe`.
-5. Click the mini island to expand; `Ctrl+Alt+I` toggles it. Right-click the tray icon for **Start with Windows** or **Exit**.
+The published app does not need a separately installed .NET runtime.
+Keep the executable in its permanent location before enabling startup.
+If an older version has startup enabled, launching the published new executable migrates the existing
+opt-in to its current location and removes the legacy startup entry. Startup remains off by default.
 
-**Note:** This source bundle was prepared without a Windows/.NET build environment, so compilation and native integration have **not been tested**. If you see a compiler error, keep the entire output and use it to troubleshoot; do not treat this as a verified working executable yet.
+GitHub Actions retains the existing `windows-latest` / .NET 10 / self-contained win-x64 flow.
+It runs the lyric regression checks, publishes, verifies `dist/TheIsland.exe`, and uploads
+**The-Island-Windows-x64**. Runs are triggered by main pushes, pull requests and manual dispatch.
+Download the artifact, then extract the ZIP inside it.
 
-## Build in GitHub, without SDK on your own PC
+## Use
 
-1. Create a new GitHub repository (`RIO-Island`).
-2. Upload **all files inside the extracted project folder**, including the hidden `.github/workflows/windows-build.yml` path.
-3. In the repository, open **Actions** → **Build RIO Island for Windows** → **Run workflow**. Ensure Actions are enabled.
-4. If the Windows build succeeds, download artifact **RIO-Island-Windows-x64** and extract the ZIP, then launch `RioIsland.exe`.
+Click the compact island or press Ctrl+Alt+I to expand. Play music in an app that exposes a Windows
+media session. Use **Load .lrc** to select a UTF-8 lyric file matching the current recording.
+The island follows the player timeline, including pause/resume and seeks reported by that player.
+Use the player's own seek control; the island progress bar is a read-only indicator.
 
-This is a build workflow, **not an installer**. A signed installer can be added later. Windows SmartScreen may warn on unsigned or newly built apps; don't bypass warnings for executables you cannot verify.
+Right-click the tray icon to change startup behavior or exit. Clipboard text is read only when
+**Capture** is clicked. Dropped files are not copied, opened, uploaded or retained after exit.
 
-### Project map
+## Performance
 
-- `src/RioIsland/MainWindow.xaml` — shell UI, expansion panel, colors
-- `src/RioIsland/MainWindow.xaml.cs` — animations, media sessions, timer, tray, drag/drop
-- `src/RioIsland/NativeMetrics.cs` — CPU/RAM via Win32 P/Invoke
-- `src/RioIsland/LrcLyrics.cs` — local timestamped LRC parsing
-- `.github/workflows/windows-build.yml` — self-contained Windows x64 CI build
+No new third-party dependencies, browser engine, background network calls, backdrop blur shaders or
+permanent rendering callbacks. Metadata/artwork update from Windows events, not a polling loop.
+Only one 128-pixel-wide decoded artwork is retained; source thumbnails larger than 4 MB are skipped.
+LRC input is limited to 1 MB.
 
-### Performance design
+The housekeeping timer runs once per second. CPU/RAM counters update every two seconds while expanded.
+The 250 ms position/lyric timer runs only while expanded, playing and a usable timeline exists.
+Animations end after a short transition. Windows reduced-motion preferences, remote sessions and
+software-rendering tier disable decorative motion. Event handlers and timers are detached at shutdown.
 
-- No Chromium, no Electron, no embedded browser.
-- System counters update once per second, media track metadata ~every 3 seconds.
-- UI is completely hidden when collapsed except the small pill-shaped island.
-- Actual RAM/CPU footprint and animation FPS still require measurements on Windows hardware.
+Glass is a lightweight visual treatment, not native Acrylic/Mica desktop blur.
+Low-resource implementation choices do not establish a measured CPU/RAM budget.
 
-### Security / privacy
+## Verification
 
-- Clipboard is **never monitored in the background**; text is captured only on explicit click and kept in process memory.
-- The app does not upload files or clipboard content and has no network communications in its own code.
-- `Start with Windows` modifies only `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` and is off by default.
-- LRC lyrics are read from a file the user selects; no lyrics are downloaded.
+Run the dependency-free parser checks:
 
-### References
+```powershell
+dotnet run --project tests/TheIsland.Tests/TheIsland.Tests.csproj -c Release
+```
 
-Design inspiration only (no source code copied): [Nusa](https://rama2555.github.io/nusa/) and [Windows Dynamic Island](https://github.com/HeyyCzer/windows-dynamic-island). [Microsoft Windows.Media.Control API](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssessionmanager.requestasync).
+The upgrade was locally published on Windows with .NET SDK 10.0.402 as self-contained win-x64.
+Fourteen parser checks passed, covering fractions, multiple tags, offsets, malformed input, duplicate
+timestamps, instrumental blanks and backward seeks. A separate WPF smoke harness loaded the real
+XAML, exercised 20 rapid toggles and rendered the expanded panel.
 
-### Next milestones
+Before releasing, check on your Windows desktop:
 
-1. Compile and smoke-test on Windows 10/11; adjust any build errors or DPI quirks.
-2. Album artwork and playback progress; better file shelf; display selection.
-3. Consent-based Windows notification access, not intrusive global hooks.
-4. Configurable theme/settings, volume overlay, GPU monitor; optional lyrics provider under acceptable terms.
+1. Expand/collapse repeatedly, Ctrl+Alt+I, Escape and tray exit. Check 100%, 125% and 150% DPI.
+2. With Spotify/browser/local player: artwork, commands, pause/resume, forward/backward seek,
+   switching active players, closing the player and no-artwork fallback.
+3. Load a matching LRC; verify exact timestamps, offsets, pause and track-change clearing.
+4. Check focus completion notification, clipboard capture/restore, file drop/clear and startup opt-in.
+5. Observe mascot idle sleep/wake and reduced-motion behavior. Compare Task Manager CPU and memory
+   while collapsed, expanded, paused and playing on the intended older PC.
+
+## Limits
+
+Actual third-party player integration, audible playback, startup/login behavior, notifications,
+DPI variations and sustained CPU/RAM usage have not been manually verified on target hardware.
+Artwork, duration, playback rate and event accuracy depend on what each player exposes.
+Missing duration/timeline shows `--:--` and a lyric availability message rather than guessing.
+Lyrics are line-synced, not word-by-word karaoke; there is no automatic lyric download.
+Track association uses source app, title, artist, album and track number, so indistinguishable metadata
+cannot identify separate recordings. The shelf remains a non-persistent filename/count summary.
+The existing primary-work-area positioning remains; there is no display selector.
+Global hotkey availability depends on conflicts with other apps.
+No notification capture from other apps, GPU metrics or installer/signing has been added.
+
+## Source map
+
+- `MainWindow.xaml`: pill, eye shapes, media card and preserved utility controls.
+- `MainWindow.xaml.cs`: UI motion, mascot states, lyric binding, timer, metrics, tray and utilities.
+- `MediaSessionService.cs`: Windows media events, commands, bounded artwork and timeline state.
+- `LrcLyrics.cs`: local timestamp parser and binary-search lookup.
+- `NativeMetrics.cs`: existing Win32 CPU/RAM metrics (unchanged).
+- `RioIsland.csproj`: existing framework settings, executable/product identity.
+- `.github/workflows/windows-build.yml`: Windows build and packaging.
+- `tests/TheIsland.Tests`: lightweight parser regression checks.
+
+Upgrade baseline: repository commit `ae63dfacf3d920124125be14b1ba5869a28b1354`.

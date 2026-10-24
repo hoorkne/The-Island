@@ -16,6 +16,8 @@ internal static class LrcLyrics
     public static List<LyricLine> Parse(string contents)
     {
         List<LyricLine> output = new();
+        var offsetMatch = Regex.Match(contents, @"\[offset:([+-]?\d+)\]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        int offset = offsetMatch.Success && int.TryParse(offsetMatch.Groups[1].Value, out int value) ? value : 0;
         foreach (string line in contents.Split('\n'))
         {
             var matches = TimeTag.Matches(line);
@@ -35,10 +37,11 @@ internal static class LrcLyrics
                     _ => 0
                 };
                 output.Add(new LyricLine(TimeSpan.FromMinutes(min) + TimeSpan.FromSeconds(sec) +
-                                         TimeSpan.FromMilliseconds(milliseconds), words));
+                                         TimeSpan.FromMilliseconds(milliseconds) - TimeSpan.FromMilliseconds(offset), words));
             }
         }
-        output.Sort((a, b) => a.At.CompareTo(b.At));
+        // Stable order makes duplicate timestamps deterministic (last source line wins).
+        output = System.Linq.Enumerable.ToList(System.Linq.Enumerable.OrderBy(output, line => line.At));
         return output;
     }
 
@@ -52,6 +55,6 @@ internal static class LrcLyrics
             if (lines[mid].At <= position) { result = mid; lo = mid + 1; }
             else hi = mid - 1;
         }
-        return result == -1 ? "♫" : lines[result].Text;
+        return result == -1 ? "Waiting for the first line" : lines[result].Text;
     }
 }

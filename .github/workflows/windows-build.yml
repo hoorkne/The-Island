@@ -1,7 +1,9 @@
-name: Build RIO Island for Windows
+name: Build The Island for Windows
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 permissions:
@@ -17,16 +19,20 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Test lyric parser
+        run: dotnet run --project tests/TheIsland.Tests/TheIsland.Tests.csproj -c Release
       - name: Restore
         run: dotnet restore src/RioIsland/RioIsland.csproj
       - name: Publish portable Windows x64 executable
         run: dotnet publish src/RioIsland/RioIsland.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:DebugSymbols=false -o dist
-      - name: Package
+      - name: Verify and package
         shell: pwsh
-        run: Compress-Archive -Path dist/* -DestinationPath RIO-Island-Windows-x64.zip
+        run: |
+          if (!(Test-Path dist/TheIsland.exe)) { throw "TheIsland.exe was not produced" }
+          Compress-Archive -Path dist/* -DestinationPath The-Island-Windows-x64.zip
       - name: Attach downloadable package
         uses: actions/upload-artifact@v4
         with:
-          name: RIO-Island-Windows-x64
-          path: RIO-Island-Windows-x64.zip
+          name: The-Island-Windows-x64
+          path: The-Island-Windows-x64.zip
           if-no-files-found: error

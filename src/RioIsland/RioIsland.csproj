@@ -6,7 +6,9 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>RioIsland</AssemblyName>
+    <AssemblyName>TheIsland</AssemblyName>
+    <Product>The Island</Product>
+    <Title>The Island</Title>
     <RootNamespace>RioIsland</RootNamespace>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
