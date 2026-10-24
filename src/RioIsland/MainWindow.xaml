@@ -1,0 +1,212 @@
+<Window x:Class="RioIsland.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RIO Island" Height="46" Width="238"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        FontFamily="Segoe UI" FontSize="12" Foreground="#EEF9FF"
+        Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized"
+        Closing="Window_Closing" AllowDrop="True"
+        DragOver="Window_DragOver" Drop="Window_Drop">
+  <Window.Resources>
+    <Style x:Key="PillButton" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Background" Value="#294359"/>
+      <Setter Property="Foreground" Value="#E7FEFF"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="9,5"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}"
+                    CornerRadius="10" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="#365F73"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="#178B87"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="SectionCaption" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#7D9CAA"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+  </Window.Resources>
+
+  <Border x:Name="IslandShell" BorderThickness="1" CornerRadius="23"
+          BorderBrush="#4862EAD7" SnapsToDevicePixels="True">
+    <Border.Background>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F8081422" Offset="0"/>
+        <GradientStop Color="#FA11243A" Offset="0.55"/>
+        <GradientStop Color="#FA120F28" Offset="1"/>
+      </LinearGradientBrush>
+    </Border.Background>
+    <Grid ClipToBounds="True">
+      <!-- Minimal always-on-top notch; click to open. -->
+      <Grid x:Name="CompactView" Background="Transparent"
+            MouseLeftButtonUp="CompactView_MouseLeftButtonUp">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="45"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="24"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="✦" Foreground="#4BF0D1" FontSize="24"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="RIO ISLAND" FontSize="11" FontWeight="Bold"
+                     Foreground="#F4FFFF"/>
+          <TextBlock x:Name="CompactStatus" Text="Click to expand"
+                     Foreground="#9EC3CD" FontSize="10" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+        <Ellipse Grid.Column="2" Fill="#48E8BD" Height="7" Width="7"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Grid>
+
+      <!-- Expanded dashboard -->
+      <Grid x:Name="ExpandedView" Visibility="Collapsed" Margin="18,12,18,12">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="36"/>
+          <RowDefinition Height="100"/>
+          <RowDefinition Height="54"/>
+          <RowDefinition Height="53"/>
+          <RowDefinition Height="45"/>
+          <RowDefinition Height="44"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+            <TextBlock Text="✦" Foreground="#4BF0D1" FontSize="22" Margin="0,-6,9,0"/>
+            <StackPanel>
+              <TextBlock Text="RIO ISLAND" FontSize="15" FontWeight="Bold"/>
+              <TextBlock Text="YOUR DESKTOP. REIMAGINED." FontSize="9" Foreground="#819FBA"/>
+            </StackPanel>
+          </StackPanel>
+          <Button Grid.Column="1" Content="✕" Style="{StaticResource PillButton}"
+                  Width="30" Height="28" Click="ClosePanel_Click" ToolTip="Collapse"/>
+        </Grid>
+
+        <Border Grid.Row="1" CornerRadius="14" Background="#26345167" Margin="0,1,0,7" Padding="12,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="58"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Width="46" Height="46" CornerRadius="13"
+                    Background="#394E6F" VerticalAlignment="Center">
+              <TextBlock Text="♫" FontSize="29" Foreground="#65F7DC"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock x:Name="SongTitle" Text="No media playing" FontSize="13"
+                         FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+              <TextBlock x:Name="SongArtist" Text="Spotify • Browser • Windows media"
+                         Foreground="#9BB4C9" FontSize="10" TextTrimming="CharacterEllipsis"/>
+              <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                <Button Content="⏮" Style="{StaticResource PillButton}" Width="39" Height="26"
+                        Click="Previous_Click" ToolTip="Previous"/>
+                <Button x:Name="PlayButton" Content="▶" Style="{StaticResource PillButton}"
+                        Margin="5,0" Width="46" Height="26" Click="PlayPause_Click" ToolTip="Play / pause"/>
+                <Button Content="⏭" Style="{StaticResource PillButton}" Width="39" Height="26"
+                        Click="Next_Click" ToolTip="Next"/>
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,1,0,5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <TextBlock x:Name="CpuText" Text="CPU —" FontSize="11" FontWeight="SemiBold"/>
+            <ProgressBar x:Name="CpuBar" Margin="0,8,0,0" Height="5" Minimum="0" Maximum="100"
+                         Foreground="#4BE6D2" Background="#374C60" Value="0"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock x:Name="RamText" Text="RAM —" FontSize="11" FontWeight="SemiBold"/>
+            <ProgressBar x:Name="RamBar" Margin="0,8,0,0" Height="5" Minimum="0" Maximum="100"
+                         Foreground="#987BFF" Background="#374C60" Value="0"/>
+          </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="0,3,0,5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="FOCUS TIMER" Style="{StaticResource SectionCaption}"/>
+            <TextBlock x:Name="TimerText" Text="25:00" FontSize="19" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <Button x:Name="TimerButton" Content="Start" Style="{StaticResource PillButton}"
+                    Click="Timer_Click" Margin="0,0,6,0"/>
+            <Button Content="Reset" Style="{StaticResource PillButton}" Click="ResetTimer_Click"/>
+          </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="4" Margin="0,2,0,5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="SYNCED LYRICS · LOCAL .LRC" Style="{StaticResource SectionCaption}"/>
+            <TextBlock x:Name="LyricsText" Text="Load lyrics for the current song"
+                       Foreground="#DDFFF8" FontSize="11" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+          <Button Grid.Column="1" Content="Load .lrc" Style="{StaticResource PillButton}"
+                  VerticalAlignment="Center" Click="LoadLyrics_Click"/>
+        </Grid>
+
+        <Grid Grid.Row="5" Margin="0,2,0,4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="CLIPBOARD · OPT-IN" Style="{StaticResource SectionCaption}"/>
+            <TextBlock x:Name="ClipboardText" Text="Nothing captured"
+                       FontSize="11" Foreground="#BDD5E0" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <Button Content="Capture" Style="{StaticResource PillButton}" Click="CaptureClipboard_Click"/>
+            <Button Content="Restore" Style="{StaticResource PillButton}" Margin="6,0,0,0"
+                    Click="RestoreClipboard_Click"/>
+          </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="6" Margin="0,0,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="FILE SHELF · DROP A FILE ON THE ISLAND"
+                       Style="{StaticResource SectionCaption}"/>
+            <TextBlock x:Name="ShelfText" Text="No file dropped" FontSize="11"
+                       Foreground="#BDD5E0" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+          <Button Grid.Column="1" Content="Clear" Style="{StaticResource PillButton}"
+                  VerticalAlignment="Center" Click="ClearShelf_Click"/>
+        </Grid>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>
